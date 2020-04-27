@@ -9,10 +9,11 @@ __license__ = 'BSD - see LICENSE file in top-level package directory'
 __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 from elasticsearch import Elasticsearch
-from elasticsearch.helpers import scan, parallel_bulk
+from elasticsearch.helpers import scan, bulk
 import argparse
 from getpass import getpass
 import configparser
+from tqdm import tqdm
 
 from ceda_elasticsearch_tools.elasticsearch import CEDAElasticsearchClient
 
@@ -25,12 +26,13 @@ class ElasticsearchMigrate:
         self.source_index = source_index
         self.dest_index = dest_index
         self.keep_id = keep_id
+        self.total = self.source.count(index=self.source_index)['count']
 
     def gendata(self):
 
-        all_data = scan(self.source, size=8000, index=self.source_index)
+        all_data = scan(self.source, index=self.source_index)
 
-        for item in all_data:
+        for item in tqdm(all_data, total=self.total, desc='Paging source'):
             response = {
                 '_index': self.dest_index,
                 '_source': item['_source'],
@@ -38,9 +40,7 @@ class ElasticsearchMigrate:
             yield response
 
     def migrate(self):
-        for success, info in parallel_bulk(self.dest, self.gendata(), chunk_size=1000, thread_count=8, queue_size=8):
-            if not success:
-                print(info)
+        info = bulk(self.dest, self.gendata())
 
 
 def main():
