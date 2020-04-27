@@ -12,6 +12,7 @@ from elasticsearch import Elasticsearch
 from elasticsearch.helpers import scan, parallel_bulk
 import argparse
 from getpass import getpass
+import configparser
 
 from ceda_elasticsearch_tools.elasticsearch import CEDAElasticsearchClient
 
@@ -50,18 +51,26 @@ def main():
                         dest='PRESERVE_ID',
                         help='Preserve id from source index in dest index',
                         action='store_true')
+    parser.add_argument('--conf', dest='CONF')
 
     args = parser.parse_args()
 
-    username = input('Username: ')
-    password = getpass()
-    prompt = input(f'You are about to migrate from {args.SOURCE} to {args.DEST}.'
-                   f' ID preservation is set to {args.PRESERVE_ID}.'
-                   f' Is that OK? [Y/n]')
+    if args.CONF:
+        config = configparser.ConfigParser()
+        config.read(args.CONF)
+        username = config.get('DEFAULT', 'username')
+        password = config.get('DEFAULT', 'password')
 
-    if not prompt.lower() in ('', 'y'):
-        print('Terminating migration. No migration performed')
-        exit()
+    else:
+        username = input('Username: ')
+        password = getpass()
+        prompt = input(f'You are about to migrate from {args.SOURCE} to {args.DEST}.'
+                       f' ID preservation is set to {args.PRESERVE_ID}.'
+                       f' Is that OK? [Y/n]')
+
+        if not prompt.lower() in ('', 'y'):
+            print('Terminating migration. No migration performed')
+            exit()
 
     es_kwargs = {
         'http_auth': (username, password)
