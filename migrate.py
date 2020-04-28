@@ -40,7 +40,7 @@ class ElasticsearchMigrate:
             yield response
 
     def migrate(self):
-        info = bulk(self.dest, self.gendata())
+        info = bulk(self.dest, self.gendata(), chunk_size=1000)
 
 
 def main():
@@ -58,12 +58,10 @@ def main():
     if args.CONF:
         config = configparser.ConfigParser()
         config.read(args.CONF)
-        username = config.get('DEFAULT', 'username')
-        password = config.get('DEFAULT', 'password')
+        api_key = config.get('DEFAULT', 'api-key')
 
     else:
-        username = input('Username: ')
-        password = getpass()
+        api_key = input('api-key: ')
         prompt = input(f'You are about to migrate from {args.SOURCE} to {args.DEST}.'
                        f' ID preservation is set to {args.PRESERVE_ID}.'
                        f' Is that OK? [Y/n]')
@@ -73,7 +71,8 @@ def main():
             exit()
 
     es_kwargs = {
-        'http_auth': (username, password)
+        'headers':{'x-api-key': api_key},
+        'timeout': 60
     }
 
     esm = ElasticsearchMigrate(args.SOURCE, args.DEST, args.PRESERVE_ID, **es_kwargs)
