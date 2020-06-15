@@ -11,7 +11,6 @@ __contact__ = 'richard.d.smith@stfc.ac.uk'
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import scan, bulk
 import argparse
-from getpass import getpass
 import configparser
 from tqdm import tqdm
 
@@ -37,10 +36,14 @@ class ElasticsearchMigrate:
                 '_index': self.dest_index,
                 '_source': item['_source'],
             }
+
+            if self.keep_id:
+                response['_id'] = item['_id']
+
             yield response
 
     def migrate(self):
-        info = bulk(self.dest, self.gendata(), chunk_size=1000)
+        info = bulk(self.dest, self.gendata())
 
 
 def main():
