@@ -1,5 +1,5 @@
 git+https://github.com/cedadev/ceda-elasticsearch-tools.git@467a6a54220015571a381b7bd4eb8d8cd3d198cb#egg=ceda_elasticsearch_tools
-certifi==2020.4.5.1
+certifi==2022.12.7
 chardet==3.0.4
 docopt==0.6.2
 elasticsearch==7.6.0
